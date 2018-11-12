@@ -1,0 +1,81 @@
+
+public class AlineamientoMultipleSecuencias_Main {
+	
+	public static void main(String[] args) {
+		AlineamientoMultipleSecuencias alineamiento1 = new AlineamientoMultipleSecuencias();
+		
+		System.out.println("Tamaño secuencia: " + alineamiento1.tamanyoGap);
+		
+		/* Se crea un nuevo objeto de tipo AlgoritmoGenetico pasando al constructor de dicha clase:
+		 * - Tamaño del Gap.
+		 * - Número de secuencias a analizar.
+		 * - Objeto de tipo AlineamientoMultipleSecuencias.
+		 */
+		AlgoritmoGenetico algoritmoGenetico1 = new AlgoritmoGenetico(alineamiento1.tamanyoGap,alineamiento1.numeroSecuencias, alineamiento1);
+		
+		System.out.println("Ejecutando Algoritmo Genético...");
+		
+		double lastBest = algoritmoGenetico1.eliteF;
+		
+		algoritmoGenetico1.ejecutarAlgoritmoGenetico();
+
+		
+//		// Iteraciones para la ejecución del Algoritmo Genético.
+//		for (int k = 1; k < 100; k++) {
+//			algoritmoGenetico1.ejecutarAlgoritmoGenetico();
+//
+//				System.out.println("Mejor resultado: " + k + " = " + algoritmoGenetico1.eliteF);
+//			lastBest = algoritmoGenetico1.eliteF;
+//		}
+		System.out.println("Best Individual:");
+		imprimirMejorResultado(algoritmoGenetico1, alineamiento1);
+		
+	}
+
+	private static void imprimirMejorResultado(AlgoritmoGenetico algoritmoGenetico, AlineamientoMultipleSecuencias alineamientoMultipleSecuencias) {
+		Integer[][] individuo = algoritmoGenetico.vector_eliteIndividual;
+		for (int l = 0; l < individuo.length; l++) {
+			int size = -1;
+			for (int c = 0; c < individuo[0].length; c++) {
+				char c1;
+				if (individuo[l][c] == 1) {
+					size++;
+					c1 = alineamientoMultipleSecuencias.getChar(l, size);
+				} else
+					c1 = '-';
+				System.out.print(c1);
+			}
+			System.out.println();
+		}
+		int[] size = new int[individuo.length];
+		char[]	column = new char[individuo.length];
+		int matches = 0;
+		for (int i = 0; i < individuo.length; i++){
+			size[i] = -1;
+		}
+		for (int c = 0; c < individuo[0].length; c++) {
+			for (int l = 0; l < individuo.length; l++) {
+				if (individuo[l][c] == 1) {
+					size[l]++;
+					column[l] = alineamientoMultipleSecuencias.getChar(l, size[l]);
+				} else
+					column[l] = '-';
+			}
+			// Comprobar la columna
+			boolean match = true;
+			char e = column[0];
+			for (int i = 1; i < individuo.length; i++) {
+				if (column[i] != e)
+					match = false;
+			}
+			if (match && e != '-') {
+				System.out.print("*");
+				matches++;
+			} else
+				System.out.print(" ");
+		}
+		System.out.println();
+		System.out.println("Score = " + algoritmoGenetico.eliteF + ", with " + matches + " columns matching.");
+	}
+}
+

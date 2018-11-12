@@ -1,0 +1,593 @@
+import java.util.Vector;
+
+public class AlgoritmoGenetico {
+
+	// Declaraci—n de variables
+	private double mutacion = 0.0005;
+	private double cruce = 0.40;
+	private double[] tasaMigracion;
+	// private int intervaloMigracion = 5;
+	private int intervaloMigracion = 1;
+
+	private double[] nuevoFitness; // new fitness gain
+	private double[] antiguoFitness;
+	public int generacion;
+	public static int l, w;
+	// public static int n = 500;
+	// public static int p = 5;
+
+	public static int n = 500;
+	public static int p = 5;
+
+	// public int [][] populationGA;
+	public Vector<Vector<Integer[][]>> vectorAlgoritmoGenetico;
+	public Vector<Vector<Double>> fitness;
+	public Vector<Vector<Integer[][]>> nuevo_vectorAlgoritmoGenetico;
+	public Vector<Vector<Double>> nuevo_vectorFitness;
+	public double eliteF;
+	public int[] eliteI;
+	public Integer[][] vector_eliteIndividual;
+	public double[] elites;
+	private double[] vector_eliteAntiguos;
+	// public int optimo = 600; // Set the optimum here
+	public int optimo = 100; // Set the optimum here
+
+	private static AlineamientoMultipleSecuencias ams; // multi sequence
+														// alignment problem
+	private Integer[][][][] poblacionNueva;
+	private Double[][] fitnessNuevo;
+	private Integer[][] orden;
+	public double[] fitness_medio;
+	public double[] fitness_minimo;
+	public double[] fitness_maximo;
+
+	public AlgoritmoGenetico(int L, int W, AlineamientoMultipleSecuencias M) {
+
+		l = L;
+		w = W;
+		vectorAlgoritmoGenetico = new Vector<Vector<Integer[][]>>();
+		fitness = new Vector<Vector<Double>>();
+		nuevo_vectorAlgoritmoGenetico = new Vector<Vector<Integer[][]>>();
+		nuevo_vectorFitness = new Vector<Vector<Double>>();
+		for (int i = 0; i < p; i++) {
+			vectorAlgoritmoGenetico.add(new Vector<Integer[][]>());
+			fitness.add(new Vector<Double>());
+			nuevo_vectorAlgoritmoGenetico.add(new Vector<Integer[][]>());
+			nuevo_vectorFitness.add(new Vector<Double>());
+		}
+
+		ams = M;
+		generacion = 0;
+		fitness_medio = new double[p];
+		fitness_minimo = new double[p];
+		fitness_maximo = new double[p];
+		tasaMigracion = new double[p];
+		nuevoFitness = new double[p];
+		antiguoFitness = new double[p];
+		randomGAPop();
+		eliteF = -100000;
+		eliteI = new int[3];
+		eliteI[0] = eliteI[1] = eliteI[2] = 0;
+		getBestF();
+		vector_eliteAntiguos = elites;
+		for (int i = 0; i < p; i++) {
+			tasaMigracion[i] = 0.15;
+			antiguoFitness[i] = 0;
+		}
+	}
+
+	public void ejecutarAlgoritmoGenetico() {
+		generacion++;
+		cruzar();
+		mutar();
+		setElite();
+		remplazar();
+		if (generacion % intervaloMigracion == 0)
+			migration_mix_fixed();
+
+	}
+
+	public void cruzar() {
+		Integer[][] child1;
+		Integer[][] child2;
+		int type = 0;
+
+		if (Math.random() >= 2.0 / 3.0) {
+			type = 1;
+		} else if (Math.random() >= 1.0 / 3.0) {
+			type = 2;
+		}
+	}
+
+	public void mutar() {
+		int type = 0;
+		if (Math.random() >= 2.0 / 3.0) {
+			type = 1;
+		} else if (Math.random() >= 1.0 / 3.0) {
+			type = 2;
+		}
+		int max = 1;
+//		for (int k = 0; k < p; k++) {
+//			for (int i = 0; i < vectorAlgoritmoGenetico.get(k).size(); i++) {
+//				Integer[][] indiv = vectorAlgoritmoGenetico.get(k).get(i);
+//				int T = type;
+//				for (int m = 0; m < max; m++) {
+//					Integer[][] indivTemp = new Integer[w][l];
+//					for (int a = 0; a < w; a++) {
+//
+//						indivTemp[a] = copy(indiv[a]);
+//					}
+//
+//					if (T == 2)
+//						repair(indivTemp, null);
+//					if (getFitness(indivTemp) > fitness.get(k).get(i)) {
+//						indiv = indivTemp;
+//						vectorAlgoritmoGenetico.get(k).set(i, indiv);
+//						break;
+//					} else {
+//						// new type
+//						if (Math.random() >= 0.5)
+//							T = (T + 1) % 3;
+//						else
+//							T = (T + 2) % 3;
+//					}
+//				}
+//			}
+//
+//			for (int i = 0; i < nuevo_vectorAlgoritmoGenetico.get(k).size(); i++) {
+//				Integer[][] indiv = nuevo_vectorAlgoritmoGenetico.get(k).get(i);
+//				int T = type;
+//				for (int m = 0; m < max; m++) {
+//					Integer[][] indivTemp = new Integer[w][l];
+//					for (int a = 0; a < w; a++) {
+//						indivTemp[a] = copy(indiv[a]);
+//					}
+//					for (int n = 0; n < w; n++) {
+//						for (int j = 0; j < l; j++) {
+//							// if (indiv[n][j] == 1 && type != 2)
+//							// continue;
+//							if (Math.random() < mutacion) {
+//								// populationGA[i][j] = populationGA[i][j]^1;
+//								int r = (int) Math.floor(Math.random() * l);
+//								int t;
+//								// Swapping gap
+//								if (T == 1) {
+//									t = indivTemp[n][r];
+//									indivTemp[n][r] = indivTemp[n][j];
+//									indivTemp[n][j] = t;
+//									continue;
+//								} else if (T == 2) {
+//									indivTemp[n][j] = indivTemp[n][j] ^ 1;
+//									continue;
+//								}
+//								// else, shifting sequence
+//								// if (indiv[n][j] == 1)
+//								// continue;
+//								int start = j;
+//								int stop = j;
+//								// find 1st gap
+//								while (start - 1 >= 0) {
+//									if (indiv[n][start - 1] == 0)
+//										start--;
+//									else
+//										break;
+//								}
+//								// find last gap
+//								while (stop + 1 < l) {
+//									if (indiv[n][stop + 1] == 0)
+//										stop++;
+//									else
+//										break;
+//								}
+//								// choose random new position
+//								int size = stop - start + 1;
+//								int rand = (int) Math
+//										.floor(Math.random() * (l));
+//								int[] temp = new int[size];
+//								for (int e = 0; e < size; e++) {
+//									temp[e] = indivTemp[n][start + e];
+//								}
+//								// copy
+//								if (rand > start && rand <= stop
+//										&& stop + rand - start < l) {
+//									// shifting elements after gaps
+//									for (int e = 0; e < rand - start; e++) {
+//										indivTemp[n][start + e] = indivTemp[n][stop
+//												+ 1 + e];
+//									}
+//									for (int e = 0; e < size; e++) {
+//										indivTemp[n][rand + e] = temp[e];
+//									}
+//								} else if (rand > stop) {
+//									// shifting elements after gaps
+//									for (int e = 0; e < rand - stop; e++) {
+//										indivTemp[n][start + e] = indivTemp[n][stop
+//												+ 1 + e];
+//									}
+//									for (int e = 0; e < size; e++) {
+//										indivTemp[n][rand - size + e] = temp[e];
+//									}
+//								} else if (rand < start) {
+//									for (int e = 0; e < start - rand; e++) {
+//										indivTemp[n][stop - e] = indivTemp[n][start
+//												- 1 - e];
+//									}
+//									for (int e = 0; e < size; e++) {
+//										indivTemp[n][rand + e] = temp[e];
+//									}
+//								}
+//
+//							}// mut
+//						}// l
+//					}// w
+//					if (T == 2)
+//						repair(indivTemp, null);
+//					// if (getFitness(indivTemp) > fitness_New.get(k).get(i)) {
+//					indiv = indivTemp;
+//					nuevo_vectorAlgoritmoGenetico.get(k).set(i, indiv);
+//					/*
+//					 * break; } else { //new type if (Math.random() >= 0.5) T =
+//					 * (T+1)%3; else T = (T+2)%3; }
+//					 */
+//				}// m times
+//			}// indiv
+//		}// pop
+	}
+
+	/*
+	 * 1. Update fitness values of each individual 2. Construct Elite
+	 */
+	public void setElite() {
+		for (int k = 0; k < p; k++) {
+			// Update fitness
+			int size = fitness.get(k).size();
+			for (int i = 0; i < size; i++)
+				fitness.get(k).set(i,
+						getFitness(vectorAlgoritmoGenetico.get(k).get(i)));
+			size = nuevo_vectorFitness.get(k).size();
+			for (int i = 0; i < size; i++)
+				nuevo_vectorFitness.get(k)
+						.set(i,
+								getFitness(nuevo_vectorAlgoritmoGenetico.get(k)
+										.get(i)));
+		}
+		// Construct Elite
+		getBestF();
+	}
+
+	/**
+	 * Selecting the top to continue from current population and new population
+	 * (children and immigrants)
+	 */
+	public void remplazar() {
+		poblacionNueva = new Integer[p][][][];
+		fitnessNuevo = new Double[p][];
+		orden = new Integer[p][];
+		for (int k = 0; k < p; k++) {
+			int n = vectorAlgoritmoGenetico.get(k).size();
+			int n2 = nuevo_vectorAlgoritmoGenetico.get(k).size();
+			poblacionNueva[k] = new Integer[n + n2][w][l];
+			fitnessNuevo[k] = new Double[n + n2];
+			orden[k] = new Integer[n + n2];
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < w; j++)
+					poblacionNueva[k][i][j] = copy(vectorAlgoritmoGenetico.get(
+							k).get(i)[j]);
+				fitnessNuevo[k][i] = fitness.get(k).get(i);
+				orden[k][i] = i;
+			}
+			for (int i = 0; i < n2; i++) {
+				for (int j = 0; j < w; j++)
+					poblacionNueva[k][n + i][j] = copy(nuevo_vectorAlgoritmoGenetico
+							.get(k).get(i)[j]);
+				fitnessNuevo[k][n + i] = nuevo_vectorFitness.get(k).get(i);
+				orden[k][n + i] = n + i;
+			}
+			// sorting based on fitness
+			sort(fitnessNuevo[k], orden[k]);
+
+			// now coping n individuals to continue
+			vectorAlgoritmoGenetico.get(k).clear();
+			fitness.get(k).clear();
+			nuevo_vectorAlgoritmoGenetico.get(k).clear();
+			nuevo_vectorFitness.get(k).clear();
+			fitness_medio[k] = 0;
+			for (int i = 0; i < n; i++) {
+				int index = (int) Math.random() * i;
+				vectorAlgoritmoGenetico.get(k).add(index,
+						poblacionNueva[k][orden[k][i]]);
+				fitness.get(k).add(index, fitnessNuevo[k][orden[k][i]]);
+				fitness_medio[k] += fitnessNuevo[k][orden[k][i]];
+			}
+
+			// calculating avgFitness
+			fitness_medio[k] /= n;
+			fitness_minimo[k] = fitnessNuevo[k][orden[k][n - 1]];
+			fitness_maximo[k] = fitnessNuevo[k][orden[k][0]];
+
+		}// for each sub population
+
+	}
+
+	public void randomGAPop() {
+		for (int i = 0; i < p; i++) {
+			for (int j = 0; j < n / p; j++) {
+				Integer[][] temp = new Integer[w][l];
+				for (int k = 0; k < w; k++) {
+
+					for (int n = 0; n < l; n++) {
+						temp[k][n] = 1;
+					}
+				}
+				repair(temp, null);
+				vectorAlgoritmoGenetico.get(i).add(temp);
+				fitness.get(i).add(getFitness(temp));
+			}
+		}
+	}
+
+	// Using the sum of pairs for calculating
+	public static double getFitness(Integer[][] indiv) {
+		double sumTotal = 0;
+		double[] sumsOfPairs = new double[l];
+		int[] size = new int[w];
+		char[] column = new char[indiv.length];
+		int matches = 0;
+		for (int n = 0; n < w; n++) {
+			size[n] = -1;
+		}
+		for (int c = 0; c < l; c++) {
+			boolean lastAllGaps = true;
+			for (int n = 0; n < w; n++) {
+				if (indiv[n][c] == 1) {
+					size[n]++;
+					column[n] = ams.getChar(n, size[n]);
+				} else
+					column[n] = '-';
+				if (c > 0 && indiv[n][c - 1] == 1)
+					lastAllGaps = false;
+			}
+			sumsOfPairs[c] = 0;
+			for (int s = 0; s < w - 1; s++) {
+				char c1, c2;
+				if (indiv[s][c] == 1)
+					c1 = ams.getChar(s, size[s]);
+				else
+					c1 = '-';
+				for (int t = s + 1; t < w; t++) {
+					if (indiv[t][c] == 1)
+						c2 = ams.getChar(t, size[t]);
+					else
+						c2 = '-';
+					double dist = 0;
+					if (c1 == '-' && c2 == '-')
+						dist = 0;
+					else if (c1 == '-') {
+						if (c > 0 && indiv[s][c - 1] == 0 && !lastAllGaps)
+							dist = -0.2;
+						else
+							dist = -3;
+					} else if (c2 == '-') {
+						if (c > 0 && indiv[t][c - 1] == 0 && !lastAllGaps)
+							dist = -0.2;
+						else
+							dist = -3;
+					} else if (c1 != '-' && c2 != '-')
+						try {
+
+							if (c1 == 'u' || c2 == 'u') {
+								System.out.println(c1 + " " + c2);
+								System.out.println(s + " " + t + " " + c);
+							}
+							dist = ADN.dameDistancia(c1, c2);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+
+					sumsOfPairs[c] += dist;
+				}
+			}
+
+			boolean match = true;
+			char e = column[0];
+			for (int i = 1; i < indiv.length; i++) {
+				if (column[i] != e)
+					match = false;
+			}
+			if (match && e != '-') {
+				matches++;
+				// multiplying score
+				sumsOfPairs[c] *= 2;
+			}
+		}
+		// summing up the column score
+		for (int c = 0; c < l; c++)
+			sumTotal += sumsOfPairs[c];
+
+		return sumTotal;
+	}
+
+	public void migration_ring_fixed() {
+		// testing ring topology
+		// p1->p2, p2->p3, ...., p5->p1
+		int size = 0, dist1, dist2;
+		// Adding emigrants to the GA_New population so they will be added
+		// during selection
+		for (int k = 0; k < p; k++) {
+			size = (int) (vectorAlgoritmoGenetico.get(k).size() * tasaMigracion[k]);
+			if (k == 0) {
+				dist1 = p - 1;
+				dist2 = k + 1;
+			} else if (k == p - 1) {
+				dist1 = k - 1;
+				dist2 = 0;
+			} else {
+				dist1 = k - 1;
+				dist2 = k + 1;
+			}
+			for (int i = 0; i < size; i++) {
+				nuevo_vectorAlgoritmoGenetico.get(dist1).add(
+						poblacionNueva[k][orden[k][i]]);
+				nuevo_vectorFitness.get(dist1)
+						.add(fitnessNuevo[k][orden[k][i]]);
+				nuevo_vectorAlgoritmoGenetico.get(dist2).add(
+						poblacionNueva[k][orden[k][i]]);
+				nuevo_vectorFitness.get(dist2)
+						.add(fitnessNuevo[k][orden[k][i]]);
+			}
+		}
+	}
+
+	public void migration_mix_fixed() {
+		int size = 0;
+
+		// now choosing the population with the top indiv to migrate from
+		for (int i = 0; i < p; i++) {
+			int top = i;
+			for (int k = 0; k < p; k++) {
+				if (k == top)
+					continue; // skipping sender
+				size = (int) (vectorAlgoritmoGenetico.get(top).size() * .05);
+				for (int n = 0; n < size; n++) {
+					nuevo_vectorAlgoritmoGenetico.get(k).add(
+							poblacionNueva[top][orden[top][n]]);
+					nuevo_vectorFitness.get(k).add(
+							fitnessNuevo[top][orden[top][n]]);
+				}
+			}
+		}
+
+	}
+
+	public double getBestF() {
+		double[] best = new double[p];
+		double bestAll = -100000;
+		for (int k = 0; k < p; k++) {
+			best[k] = -100000;
+			for (int i = 0; i < fitness.get(k).size(); i++) {
+				if (best[k] < fitness.get(k).get(i)) {
+					best[k] = fitness.get(k).get(i);
+					if (eliteF < fitness.get(k).get(i)) {
+						eliteI[0] = k;
+						eliteI[1] = i;
+						eliteI[2] = 0;
+						vector_eliteIndividual = new Integer[w][l];
+						for (int j = 0; j < w; j++) {
+							vector_eliteIndividual[j] = copy(vectorAlgoritmoGenetico
+									.get(eliteI[0]).get(eliteI[1])[j]);
+						}
+					}
+				}
+			}
+			for (int i = 0; i < nuevo_vectorFitness.get(k).size(); i++) {
+				if (best[k] < nuevo_vectorFitness.get(k).get(i)) {
+					best[k] = nuevo_vectorFitness.get(k).get(i);
+					if (eliteF < nuevo_vectorFitness.get(k).get(i)) {
+						eliteI[0] = k;
+						eliteI[1] = i;
+						eliteI[2] = 1;
+						vector_eliteIndividual = new Integer[w][l];
+						for (int j = 0; j < w; j++) {
+							vector_eliteIndividual[j] = copy(nuevo_vectorAlgoritmoGenetico
+									.get(eliteI[0]).get(eliteI[1])[j]);
+						}
+					}
+				}
+			}
+		}
+		elites = best;
+		for (int i = 0; i < p; i++) {
+			if (elites[i] > eliteF) {
+				eliteF = elites[i];
+			}
+		}
+		return eliteF;
+	}
+
+	public double getSumFitness(Vector<Double> pop) {
+		double sum = 0;
+		for (int i = 0; i < pop.size(); i++) {
+			sum += pop.get(i);
+		}
+		return sum;
+	}
+
+	/*
+	 * Bubble sorting array values with indices in arg2
+	 */
+	public void sort(Double[] arg, Integer[] arg2) {
+		boolean done = true;
+		for (int i = 0; i < arg.length - 1; i++) {
+			Double a = arg[arg2[i]];
+			Double b = arg[arg2[i + 1]];
+			if (b > a) {
+				int temp = arg2[i];
+				arg2[i] = arg2[i + 1];
+				arg2[i + 1] = temp;
+				done = false;
+			}
+		}
+		if (done)
+			return;
+		else
+			sort(arg, arg2);
+	}
+
+	// returns a copy of an integer array
+	public Integer[] copy(Integer[] arg1) {
+		Integer[] toReturn = new Integer[arg1.length];
+		for (int i = 0; i < arg1.length; i++) {
+			toReturn[i] = arg1[i];
+		}
+		return toReturn;
+	}
+
+	private void repair(Integer[][] arg1, int[] arg2) {
+
+		int[] count = new int[w];
+		for (int n = 0; n < w; n++) {
+			count[n] = 0;
+			for (int j = 0; j < l; j++) {
+				if (arg1[n][j] == 1)
+					count[n]++;
+			}
+		}
+		// check if fix is needed
+		for (int n = 0; n < w; n++) {
+			// System.out.println("count c = " + count[n] + ", length c = " +
+			// msa.length(n));
+			if (count[n] < ams.length(n)) {
+				// need to add ones
+				while (count[n] < ams.length(n)) {
+					int start = (arg2 == null) ? 0 : arg2[n];
+					for (int j = start; j < l; j++) {
+						if (Math.random() < 1.0 / l) {
+							if (arg1[n][j] == 0) {
+								arg1[n][j] = 1;
+								count[n]++;
+								if (count[n] >= ams.length(n))
+									break;
+							}
+						}
+					}
+				}
+			} else if (count[n] > ams.length(n)) {
+				// need to remove ones
+				while (count[n] > ams.length(n)) {
+					int start = (arg2 == null) ? 0 : arg2[n];
+					for (int j = start; j < l; j++) {
+						if (Math.random() < 1.0 / l) {
+							if (arg1[n][j] == 1) {
+								arg1[n][j] = 0;
+								count[n]--;
+								if (count[n] <= ams.length(n))
+									break;
+							}
+						}
+					}
+				}
+			}
+		}
+	}// repair
+
+}

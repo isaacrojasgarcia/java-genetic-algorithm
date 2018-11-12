@@ -1,0 +1,41 @@
+final public class ADN {
+
+	/*
+	 * Matriz de substitucion para el ADN obtenida de:
+	 * http://www.evolution-textbook.org/content/free/tables/ch27.html
+	 */
+	private static final int[][] matrizADN = { { 0, 2, 1, 2 }, { 2, 0, 2, 1 },
+			{ 1, 2, 0, 2 }, { 2, 1, 2, 0 }, };
+
+	private static int getIndex(char a) throws Exception {
+		// Comprobaci—n de mayœsculas y minœsculas.
+		switch ((String.valueOf(a)).toUpperCase().charAt(0)) {
+		case 'A':
+			return 0;
+		case 'C':
+			return 1;
+		case 'G':
+			return 2;
+		case 'T':
+			return 3;
+		default:
+			throw new Exception("Caracter inv‡lido: " + a);
+		}
+	}
+
+	// Funci—n sobrecargada
+	private static int dameDistancia(int i, int j) throws Exception {
+		if (i < 0 || i > matrizADN[0].length) {
+			throw new Exception("Caracter inv‡lido en cadena1, posici—n " + i);
+		}
+		if (j < 0 || j > matrizADN[0].length) {
+			throw new Exception("Caracter inv‡lido en cadena2, posici—n " + j);
+		}
+
+		return matrizADN[i][j];
+	}
+
+	public static int dameDistancia(char a1, char a2) throws Exception {
+		return dameDistancia(getIndex(a1), getIndex(a2));
+	}
+}
